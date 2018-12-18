@@ -1,0 +1,324 @@
+////////////////////////////////////////////////////////////////////////////
+//																		  //
+//			               Ms.Flint GunFire(c)							  //
+//				"Global Game Manager" from Dans N' Dears				  //
+//		           ｺﾞｼﾖｳﾉｻｲﾊ ﾖｳﾘｮｳｦﾏﾓﾘ ﾃｷｾﾂ ﾆ ｺﾞﾘﾖｳﾊ ｹｲｶｸﾃｷﾆ.					  //
+//																		  //
+////////////////////////////////////////////////////////////////////////////
+#include "DxLib.h"
+#include "KeyInput.h"
+#include "Wapon.h"
+#include "Player.h"
+#include "Stage.h"
+#include "Bullet.h"
+#include "time.h"
+#include "UI.h"
+#include "Game.h"
+#include "Enemy.h"
+#include "ObjectHit.h"
+
+//----今月のDEFINE特集------------------------
+//ここでゲームの全体的な数値を弄れるぞ…勝手にしやがれ……。
+#define DEBUG
+
+#define SCREEN_WIDTH     (640)
+#define SCREEN_HEIGHT    (480)
+#define BLOCK_SIZE        (32)
+#define MAP_WIDTH        (SCREEN_WIDTH / BLOCK_SIZE)
+#define MAP_HEIGHT       (SCREEN_HEIGHT / BLOCK_SIZE)
+
+#define ALL_BULLET_MAX        128
+
+//戦闘開始時に補填される最大体力値の設定だ…。俺にはLv1で十分だ……。
+#define PLAYER_LIFE_MAX_LV1      100//
+#define PLAYER_LIFE_MAX_LV2      200//
+#define PLAYER_LIFE_MAX_LV3      500//
+
+//----銃関係をぶちこめ-----------------
+//武器毎のゴタゴタした数値の設定だ…無茶苦茶強い武器が欲しけりゃ、ここで作れるかもな……。
+
+#define WAPON_MAX 8				//使用する武器の総数
+
+	//ステータス
+#define PISTOL_DAMAGE	  8.0f  //攻　撃　力
+#define PISTOL_DERAY      0.7f	//発射ディレイのこと。
+#define PISTOL_SPEED     14.0f	//弾速のこと。
+#define PISTOL_RANGE      6.7f	//射程距離のこと。
+#define PISTOL_MAKER		0	//メーカー番号。
+
+#define HUMAN_DAMAGE	  2.0f
+#define HUMAN_DERAY       0.3f
+#define HUMAN_SPEED       3.0f
+#define HUMAN_RANGE      30.3f
+#define HUMAN_MAKER			1
+#define HUMAN_BULMAX        6	//画面に存在できる限界の数。せっかく用意したのでぜひ使ってほしい。
+
+#define ROCKET_DAMAGE	 12.0f
+#define ROCKET_DERAY      1.5f
+#define ROCKET_SPEED      1.5f
+#define ROCKET_RANGE    250.0f
+#define ROCKET_MAKER		4
+
+#define SROCKET_DAMAGE	 30.0f
+#define SROCKET_DERAY     1.0f
+#define SROCKET_SPEED     2.0f
+#define SROCKET_RANGE   250.0f
+#define SROCKET_MAKER		4
+
+#define SHOTGUN_DAMAGE	  3.0f
+#define SHOTGUN_DERAY     0.3f
+#define SHOTGUN_SPEED    16.6f
+#define SHOTGUN_RANGE     6.0f
+#define SHOTGUN_MAKER		3
+#define SHOTGUN_BULMAX      4
+
+#define SNIPER_DAMAGE	  9.0f
+#define SNIPER_DERAY      1.2f
+#define SNIPER_SPEED     28.4f
+#define SNIPER_RANGE    250.0f
+#define SNIPER_MAKER		2
+
+#define DOUBLES_DAMAGE	  5.0f
+#define DOUBLES_DERAY     0.7f
+#define DOUBLES_SPEED    16.6f
+#define DOUBLES_RANGE    13.4f
+#define DOUBLES_MAKER		5
+#define DOUBLES_BULMAX		7
+
+#define MINIGUN_DAMAGE	  5.0f
+#define MINIGUN_DERAY     0.2f
+#define MINIGUN_SPEED    17.2f
+#define MINIGUN_RANGE    50.0f
+#define MINIGUN_MAKER		5
+#define MINIGUN_BULMAX     40
+
+#define PYLO_DAMAGE		  5.0f
+#define PYLO_DERAY        0.0f	//データを作っていないように見えるものの、実際は全く異なる処理を用意しようと
+#define PYLO_SPEED        0.0f	//考えているだけ。とりあえず４つくらい実装したらもうリリースしてもいいのでは？
+#define PYLO_RANGE        0.0f	//初期武器候補：ピストル[ﾚ]、軽量ショットガン[ﾚ]、スナイパーライフル[ﾚ]、ミニガン[ﾚ]
+#define PYLO_MAKER			0
+
+//----最大限確保できる銃弾の数------
+//最大まで持てる弾薬の設定だ…欲しい分だけ用意しな……
+
+#define BULLET_MAX       500
+#define OXIGEN_MAX       333
+#define ROCKET_MAX        48
+#define SHELL_MAX         54
+#define POWBULLET_MAX     30
+#define GASOLINE_MAX     300
+
+//----ミニガン用の座標とかいろいろ-----------
+
+struct MINIGUN_PARAM {
+	float  ShotX[MINIGUN_BULMAX];
+	float  ShotY[MINIGUN_BULMAX];
+	bool   ShotF[MINIGUN_BULMAX];
+	int    ShotT[MINIGUN_BULMAX];
+	int    ShotC[MINIGUN_BULMAX];
+	bool   ShotR[MINIGUN_BULMAX];//false=左、true=右。ミニガン用の処理。連射できる武器はこのタイプを採用しようね。
+}; 
+extern struct MINIGUN_PARAM Minigun;
+extern int Shotdelay;
+extern int Shotdelaycount;			//こちら２つは、発射間隔に使っております。
+
+//----敵関係-----------
+//敵の基本ステータスの設定だ…。あんまり強いと痛い目みるぞ……
+
+#define ALL_ENEMY_MAX	256//0 ~ 63 : Creep, 64 ~ 127 : TurboFastMichelle, 128 ~ 191 : Bloodsoak, 192 ~ 255 : Human。ラビネットはリストラ。
+#define ENEMY_MAX		 64//敵限定のＭＡＸ。ライフ処理など、敵の種類を問わず行う処理は上のＭＡＸを使うこと。
+
+	//ステータス
+#define ENEMY01_LIFE		24//体力。
+#define ENEMY01_ATTACK01	14//体当たり。
+
+#define ENEMY02_LIFE		40
+#define ENEMY02_ATTACK01	10//体当たり。
+#define ENEMY02_ATTACK02	 5//ショットガン。1発辺りのダメージ。ｘ５。
+
+#define ENEMY03_LIFE		60
+#define ENEMY03_ATTACK01	15//体当たり。
+#define ENEMY03_ATTACK02	 7//レーザー攻撃。1/60秒あたりのダメージ。
+
+#define ENEMY04_LIFE		32
+#define ENEMY04_ATTACK01	 1//体当たり。
+#define ENEMY04_ATTACK02	13//ライフルダメージ。3点バースト。
+
+
+//----その他定数-------
+//書く場所が他に見つからなけりゃ、ここに書くといい…
+
+#define PI 3.141592654//きっとあらゆる側面で役に立つ。私は彼の存在に感謝し、崇拝せねばならない。
+
+
+
+//-----enum enough----------------
+//連番で数値を持つような要素を書き込めるぞ…構造体とは少し違う……よく考えて書くんだな……
+
+enum GAME_STATE {
+	GAMESTATE_TITLE = 0,
+	GAMESTATE_MAIN,
+	GAMESTATE_PAUSE,
+};
+
+enum STATE {//あくまでも「プレイヤーの」状態管理定数。
+	STATE_NORMAL = 0,
+	STATE_JUMP,
+	STATE_ATTACK,
+	STATE_DAMAGE,
+};
+
+enum WAPON_KIND {
+	WAPON_PISTOL = 0,
+	WAPON_HUMAN,
+	WAPON_ROCKET,
+	WAPON_SHOTGUN,
+	WAPON_SNIPER,
+	WAPON_DOUBLES,
+	WAPON_MINIGUN,
+	WAPON_PYLO,
+	WAPON_BASE,//厳密に種類を決定する必要があるときと、ミニガン以外は大体これで
+};
+
+enum ITEM_KIND {
+	ITEM_AMMO_BULLET = 0,	//弾薬・2mm
+	ITEM_AMMO_OXIGEN,		//弾薬・酸素
+	ITEM_AMMO_ROCKET,		//弾薬・ロケット
+	ITEM_AMMO_SHELL,		//弾薬・シェル
+	ITEM_AMMO_POW_BULLET,	//弾薬・.32
+	ITEM_AMMO_GASOLINE,		//弾薬・燃料
+	ITEM_LIFE_POTION,		//体力回復・小
+	ITEM_LIFE_CUPSULE,		//体力回復・中
+	ITEM_MEDI_KIT,			//支援物資
+	ITEM_MISC_WAPONCASE,	//QC拡張+1
+	ITEM_MISC_ARMYBELT,		//QC拡張+2
+	ITEM_MISC_GUNHOLSTER,	//QC拡張+3
+	ITEM_MISC_AMMOCASE,		//所持上限x1.5
+	ITEM_MISC_AMMOBUG,		//所持上限x2.0
+};
+
+enum ENEMY_KIND {
+	ENEMY_CREEP = 0,
+	ENEMY_TFM,
+	ENEMY_BLOODSOAK,
+	ENEMY_HUMAN,
+};
+
+//----STRUCT------------------------
+//１つの要素に必要な数値を構造体にして書き込む場所だ…チッ…どいつもこいつも群れやがって……
+
+struct KEY {//入力を全部取ってきてくれる使い魔的なやつ。できることは少ないけれど優秀。
+	int input[256];
+};
+
+struct PLAYER {
+	STATE state;
+	int gra[12];
+	float hp;
+	float hp_max;
+	int AnimNo;
+	int Anicount;
+	float x;
+	float y;
+	float vel_x;
+	float vel_y;
+	bool isGrounded;
+	int Jcount;
+	int turn;
+	bool lookup;
+	bool lookdown;
+	int fire;
+	bool QC_Enabled[3];//QC枠の利用判定用
+};
+
+struct ENEMY : public PLAYER {
+	int gra[6];
+	ENEMY_KIND kind;
+	float hp;
+	float atk01, atk02, atk03;
+	int AnimNo;
+	int Anicount;
+	float x;
+	float y;
+	float vel_x;
+	float vel_y;
+	bool isDead = true;
+	bool isNear;//ある程度近いとtrueとなります。
+	int turn;//0は右。1が左。
+};
+
+struct WAPON {
+	float x, y;
+	int gra[24];
+	int W_type;
+	WAPON_KIND Wapon_kind;
+	bool isFired;//発射してる状態だとtrueになってると幸せだよね～。
+	int Fire_gra[10];//ファイアアニメーションはWAPONが保有。残念ながらバレットではない。
+	int fireAni[ALL_BULLET_MAX];
+	int firecount[ALL_BULLET_MAX];
+	bool isFlash[ALL_BULLET_MAX];//フラッシュって一度だけでいいよね。
+	float sprash;//拡散度を示す。
+	bool have[WAPON_MAX];//武器を所持しているかどうか(各種武器の番号に対応)
+	int FastQC[4];//クイックチェンジ用配列。WAPON_KINDを格納する。
+	int NumQC[9];//ナンバーで切り替えるタイプのＱＣ。今回は使わない。
+};
+
+struct BULLET {
+	int kind;
+	float x, y;
+	float angle;
+	int turn;//0は右、1は左ですぞーっ！
+	bool hit;
+	bool alive;
+	float time;//飛行時間を示す。
+	float cool;
+};
+
+struct AMMO {//残り弾数を管理します。
+	int Bullet;
+	int Oxigen;
+	int Rocket;
+	int Shell;
+	int Pow_Bullet;
+	int Gasoline;
+	int NowAmmo;//今抱えてる弾数。
+	int MaxAmmo;//最大抱えられる弾数。
+};
+
+struct ITEM {
+	int gra[16];
+	int kind;
+	float x, y;
+	bool alive;
+};
+
+struct TILE {
+	int gra[64];
+	int StageBG_Use;
+	int StageBG[12];
+};
+
+
+//-----構造体ショーケース----------
+//用意した構造体は必ずここで他所から拾えるようにしとけ…何処で役に立つかわからねぇからな……
+
+extern struct KEY Key;
+extern struct PLAYER P;
+extern struct ENEMY enemy01[ENEMY_MAX];
+extern struct WAPON Wapon;
+extern BULLET bul[ALL_BULLET_MAX];
+extern struct AMMO Ammo;
+extern struct ITEM Item;
+extern struct TILE tile;
+
+
+//----その他他所から取ってきてほしいもの----
+//厳密には他で扱えるようにする要素を書く場所だ…どっかで使いそうな奴はとりあえず詰めとけ……
+
+extern float deltatime;//Game.cppに記述
+extern int bulgra[4];
+extern int Number[10];//我番号画像格納配列也。Game.cppに記述
+extern int Ammo_No[3];
+extern int Ammo_NoMax[3];
+extern int Score;
+extern int Score_No[8];
