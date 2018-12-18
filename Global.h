@@ -18,7 +18,6 @@
 #include "ObjectHit.h"
 
 //----今月のDEFINE特集------------------------
-//ここでゲームの全体的な数値を弄れるぞ…勝手にしやがれ……。
 #define DEBUG
 
 #define SCREEN_WIDTH     (640)
@@ -29,13 +28,11 @@
 
 #define ALL_BULLET_MAX        128
 
-//戦闘開始時に補填される最大体力値の設定だ…。俺にはLv1で十分だ……。
 #define PLAYER_LIFE_MAX_LV1      100//
 #define PLAYER_LIFE_MAX_LV2      200//
 #define PLAYER_LIFE_MAX_LV3      500//
 
 //----銃関係をぶちこめ-----------------
-//武器毎のゴタゴタした数値の設定だ…無茶苦茶強い武器が欲しけりゃ、ここで作れるかもな……。
 
 #define WAPON_MAX 8				//使用する武器の総数
 
@@ -51,15 +48,15 @@
 #define HUMAN_SPEED       3.0f
 #define HUMAN_RANGE      30.3f
 #define HUMAN_MAKER			1
-#define HUMAN_BULMAX        6	//画面に存在できる限界の数。せっかく用意したのでぜひ使ってほしい。
+#define HUMAN_BULMAX        6	//画面に存在できる限界の数。
 
-#define ROCKET_DAMAGE	 12.0f
+#define ROCKET_DAMAGE	 24.0f
 #define ROCKET_DERAY      1.5f
 #define ROCKET_SPEED      1.5f
 #define ROCKET_RANGE    250.0f
 #define ROCKET_MAKER		4
 
-#define SROCKET_DAMAGE	 30.0f
+#define SROCKET_DAMAGE	 36.0f
 #define SROCKET_DERAY     1.0f
 #define SROCKET_SPEED     2.0f
 #define SROCKET_RANGE   250.0f
@@ -85,7 +82,7 @@
 #define DOUBLES_MAKER		5
 #define DOUBLES_BULMAX		7
 
-#define MINIGUN_DAMAGE	  5.0f
+#define MINIGUN_DAMAGE	  2.0f
 #define MINIGUN_DERAY     0.2f
 #define MINIGUN_SPEED    17.2f
 #define MINIGUN_RANGE    50.0f
@@ -99,7 +96,6 @@
 #define PYLO_MAKER			0
 
 //----最大限確保できる銃弾の数------
-//最大まで持てる弾薬の設定だ…欲しい分だけ用意しな……
 
 #define BULLET_MAX       500
 #define OXIGEN_MAX       333
@@ -111,21 +107,25 @@
 //----ミニガン用の座標とかいろいろ-----------
 
 struct MINIGUN_PARAM {
-	float  ShotX[MINIGUN_BULMAX];
-	float  ShotY[MINIGUN_BULMAX];
-	bool   ShotF[MINIGUN_BULMAX];
-	int    ShotT[MINIGUN_BULMAX];
-	int    ShotC[MINIGUN_BULMAX];
+	float  ShotX[MINIGUN_BULMAX];//X座標
+	float  ShotY[MINIGUN_BULMAX];//Y座標
+	bool   ShotF[MINIGUN_BULMAX];//発射フラグ
+	int    ShotT[MINIGUN_BULMAX];//滑空時間
+	int    ShotC[MINIGUN_BULMAX];//カウント
 	bool   ShotR[MINIGUN_BULMAX];//false=左、true=右。ミニガン用の処理。連射できる武器はこのタイプを採用しようね。
+	bool   ShotH[MINIGUN_BULMAX];//ヒットフラグ
 }; 
 extern struct MINIGUN_PARAM Minigun;
 extern int Shotdelay;
 extern int Shotdelaycount;			//こちら２つは、発射間隔に使っております。
 
 //----敵関係-----------
-//敵の基本ステータスの設定だ…。あんまり強いと痛い目みるぞ……
 
-#define ALL_ENEMY_MAX	256//0 ~ 63 : Creep, 64 ~ 127 : TurboFastMichelle, 128 ~ 191 : Bloodsoak, 192 ~ 255 : Human。ラビネットはリストラ。
+//  0 ~ 63 : Creep, 
+// 64 ~ 127 : TurboFastMichelle, 
+//128 ~ 191 : Bloodsoak, 
+//192 ~ 255 : Human。ラビネットはリストラ。
+#define ALL_ENEMY_MAX	256
 #define ENEMY_MAX		 64//敵限定のＭＡＸ。ライフ処理など、敵の種類を問わず行う処理は上のＭＡＸを使うこと。
 
 	//ステータス
@@ -144,16 +144,23 @@ extern int Shotdelaycount;			//こちら２つは、発射間隔に使っております。
 #define ENEMY04_ATTACK01	 1//体当たり。
 #define ENEMY04_ATTACK02	13//ライフルダメージ。3点バースト。
 
+//ボス体力目安：
+	//(Creep基準。実際はもっと倒しづらくなると思われる)
+	// 500 : ピストル200発程度
+	// 730 : ショットガン全弾、ピストル30発程度
+	//1000 : ショットガン全弾、スナイパーライフル全弾、数発のピストルでようやく倒せる
+	//3000 : スーパーショットガン全弾、ミニガン全弾、ありったけのロケットでようやく倒せる
+	//3700 : なんとか倒せる
+#define BOSS01_LIFE		750
+
 
 //----その他定数-------
-//書く場所が他に見つからなけりゃ、ここに書くといい…
 
 #define PI 3.141592654//きっとあらゆる側面で役に立つ。私は彼の存在に感謝し、崇拝せねばならない。
 
 
 
 //-----enum enough----------------
-//連番で数値を持つような要素を書き込めるぞ…構造体とは少し違う……よく考えて書くんだな……
 
 enum GAME_STATE {
 	GAMESTATE_TITLE = 0,
@@ -165,7 +172,6 @@ enum STATE {//あくまでも「プレイヤーの」状態管理定数。
 	STATE_NORMAL = 0,
 	STATE_JUMP,
 	STATE_ATTACK,
-	STATE_DAMAGE,
 };
 
 enum WAPON_KIND {
@@ -205,8 +211,6 @@ enum ENEMY_KIND {
 };
 
 //----STRUCT------------------------
-//１つの要素に必要な数値を構造体にして書き込む場所だ…チッ…どいつもこいつも群れやがって……
-
 struct KEY {//入力を全部取ってきてくれる使い魔的なやつ。できることは少ないけれど優秀。
 	int input[256];
 };
@@ -224,10 +228,12 @@ struct PLAYER {
 	float vel_y;
 	bool isGrounded;
 	int Jcount;
-	int turn;
+	int turn;//0が右
 	bool lookup;
 	bool lookdown;
 	int fire;
+	bool isDamaged;
+	int Damagecount;//無敵時間用
 	bool QC_Enabled[3];//QC枠の利用判定用
 };
 
@@ -300,7 +306,6 @@ struct TILE {
 
 
 //-----構造体ショーケース----------
-//用意した構造体は必ずここで他所から拾えるようにしとけ…何処で役に立つかわからねぇからな……
 
 extern struct KEY Key;
 extern struct PLAYER P;
@@ -313,7 +318,6 @@ extern struct TILE tile;
 
 
 //----その他他所から取ってきてほしいもの----
-//厳密には他で扱えるようにする要素を書く場所だ…どっかで使いそうな奴はとりあえず詰めとけ……
 
 extern float deltatime;//Game.cppに記述
 extern int bulgra[4];

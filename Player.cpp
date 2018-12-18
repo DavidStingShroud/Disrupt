@@ -350,6 +350,17 @@ static void Move(float time) {
 	//----マズルフラッシュアニメ・終了----------
 
 
+	//----ダメージ判定-----------------------
+	if (P.isDamaged) {
+		P.Damagecount++;
+		if (P.Damagecount > 60) { 
+			P.Damagecount = 0;  P.state = STATE_NORMAL;
+			P.isDamaged = false;
+		}
+	}
+	//----ダメージ判定・終了-----------------
+
+
 	//----加速度適用、ブロック、接地判定--------
 	P.vel_y += 9.8f * (100) * time;
 	P.vel_x -= P.vel_x * 0.04f;
@@ -395,14 +406,16 @@ static void Jump(float time) {
 	//----空中移動・終了------------------------
 
 
-	//----加速度適用、ブロック、接地判定--------
-	P.vel_x -= P.vel_x * 0.02f;
-	P.vel_y += 9.8f * (100) * time;
-	P.x += P.vel_x * time;
+	//----加速度適用、ブロック、接地判定-------
+
+		P.vel_x -= P.vel_x * 0.02f;
+		P.vel_y += 9.8f * (100) * time;
+		P.x += P.vel_x * time;
 
 	PLAYER_BLOCKCHECKX();
 
-	P.y += P.vel_y * time + 0.89f;
+
+		P.y += P.vel_y * time + 0.89f;
 
 	P.isGrounded = false;
 
@@ -584,11 +597,22 @@ static void Jump(float time) {
 	//----マズルフラッシュアニメ・終了----------
 
 
+	//----ダメージ判定-----------------------
+	if (P.isDamaged) {
+		P.Damagecount++;
+		if (P.Damagecount > 60) {
+			P.Damagecount = 0;  P.state = STATE_NORMAL;
+			P.isDamaged = false;
+		}
+	}
+	//----ダメージ判定・終了-----------------
+
+
 	//----接地判定、ジャンプ調整----------------
 	if (P.isGrounded) {
 		P.state = STATE_NORMAL;
 	}
-	if (Key.input[KEY_INPUT_SPACE] <= 0) {
+	if (Key.input[KEY_INPUT_SPACE] <= 0 && P.isDamaged != true) {
 		P.vel_y *= 0.96f;
 	}
 	//----接地判定、ジャンプ調整----------------

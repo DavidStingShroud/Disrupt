@@ -29,6 +29,7 @@ static void Kill(WAPON_KIND kind, int no) {
 		Minigun.ShotT[no] = 0;
 		Minigun.ShotC[no] = 0;
 		Minigun.ShotF[no] = false;
+		Minigun.ShotH[no] = false;
 	}
 	else {
 		P.fire = 0;
@@ -45,14 +46,12 @@ static void Kill(WAPON_KIND kind, int no) {
 static void Bullet_HitCheck(WAPON_KIND kind, int no, float pos_x, float pos_y) {
 
 	float head = pos_y + BLOCK_SIZE / 2;
-	float right = pos_x + BLOCK_SIZE - (BLOCK_SIZE / 2);
-	float left = pos_x + (BLOCK_SIZE / 2);
+	float right = pos_x + (BLOCK_SIZE / 2);
+	float left = pos_x - (BLOCK_SIZE / 2);
 
 	bool HitTile_L = STAGE_HitCheck(left, head);
 	bool HitTile_R = STAGE_HitCheck(right, head);//Enemyとかの衝突判定を適宜追加していけば弾の削除は全部やってくれるようになる。
-	bool HitEnemy01;
-	for (int i = 0; i < ENEMY_MAX; i++) {HitEnemy01 = HitChecker(left, head, right, head, Enemy01_X1[i], Enemy01_Y1[i], Enemy01_X2[i], Enemy01_Y2[i]);}//うまく機能してない？？
-	if (HitTile_R || HitTile_L || HitEnemy01) {
+	if (HitTile_R || HitTile_L || bul[no].hit || Minigun.ShotH[no]) {
 		if (kind == WAPON_MINIGUN)	Kill(WAPON_MINIGUN, no);
 		else						Kill(WAPON_BASE , no);
 	}
@@ -105,14 +104,14 @@ void NozzleputterDefault(int i) {
 		}
 
 			bul[i].y = P.y - 46;//23
-
-		bul[i].alive = true;
+			bul[i].hit = false;
+			bul[i].alive = true;
 }
 
 void ChainBulletSetter(int no) {
-			if (Minigun.ShotR[no] == true) { Minigun.ShotX[no] = P.x - 56.0f; }//28.0f
-			else if (Minigun.ShotR[no] == false) { Minigun.ShotX[no] = P.x + 24.0f; }//12.0f
-			Minigun.ShotY[no] = P.y - 22.0f/*11.0f*/ - (rand() % 10/*5*/ + rand() % 10/*5*/);
+			if (Minigun.ShotR[no] == true) { Minigun.ShotX[no] = P.x - 56.0f; }
+			else if (Minigun.ShotR[no] == false) { Minigun.ShotX[no] = P.x + 24.0f; }
+			Minigun.ShotY[no] = P.y - 22.0f - (rand() % 10 + rand() % 10);
 			Minigun.ShotF[no] = true;
 }
 
@@ -135,7 +134,7 @@ void ChainBulletUpdater(int no) {
 			|| Minigun.ShotX[no] > (GetPlayerPosX() + SCREEN_WIDTH / 2)) {
 			Kill(WAPON_MINIGUN, no);
 		}
-		Bullet_HitCheck(WAPON_MINIGUN, no, Minigun.ShotX[no], Minigun.ShotY[no]);
+		if(Minigun.ShotF[no])Bullet_HitCheck(WAPON_MINIGUN, no, Minigun.ShotX[no], Minigun.ShotY[no]);
 }
 
 float RSM;
@@ -192,7 +191,7 @@ void ShotGunUpdater(int no) {
 				}
 			}
 		}
-	Bullet_HitCheck(WAPON_BASE, no, bul[no].x, bul[no].y);
+	if(bul[no].alive)Bullet_HitCheck(WAPON_BASE, no, bul[no].x, bul[no].y);
 }
 
 void Fire(int i)
@@ -200,7 +199,7 @@ void Fire(int i)
 	if (bul[i].turn == 0) {
 		if (Wapon.Wapon_kind == WAPON_PISTOL) { bul[i].x += PISTOL_SPEED; }
 		if (Wapon.Wapon_kind == WAPON_HUMAN) { bul[i].x += HUMAN_SPEED; }
-		if (Wapon.Wapon_kind == WAPON_ROCKET) { bul[i].x += ROCKET_SPEED + rocket_velocity[i] * 0.5f; rocket_velocity[i]++; }
+		if (Wapon.Wapon_kind == WAPON_ROCKET) { bul[i].x += ROCKET_SPEED + rocket_velocity[i] * 0.1f; rocket_velocity[i]++; }
 		if (Wapon.Wapon_kind == WAPON_SNIPER) { bul[i].x += SNIPER_SPEED; }
 		if (Wapon.W_type >= 21 && Wapon.W_type <= 23) { bul[i].x += PYLO_SPEED; }
 		bul[i].time++;
@@ -209,7 +208,7 @@ void Fire(int i)
 		else if (bul[i].turn == 1) {
 			if (Wapon.Wapon_kind == WAPON_PISTOL) { bul[i].x -= PISTOL_SPEED; }
 			if (Wapon.Wapon_kind == WAPON_HUMAN) { bul[i].x -= HUMAN_SPEED; }
-			if (Wapon.Wapon_kind == WAPON_ROCKET) { bul[i].x -= ROCKET_SPEED + rocket_velocity[i] * 0.5f; rocket_velocity[i]++; }
+			if (Wapon.Wapon_kind == WAPON_ROCKET) { bul[i].x -= ROCKET_SPEED + rocket_velocity[i] * 0.1f; rocket_velocity[i]++; }
 			if (Wapon.Wapon_kind == WAPON_SNIPER) { bul[i].x -= SNIPER_SPEED; }
 			if (Wapon.W_type >= 21 && Wapon.W_type <= 23) { bul[i].x -= PYLO_SPEED; }
 			bul[i].time++;
@@ -230,10 +229,10 @@ void Fire(int i)
 				|| ((Wapon.W_type >= 21 && Wapon.W_type <= 23) && (bul[i].cool > PYLO_DERAY))
 				|| bul[i].x < (GetPlayerPosX() - SCREEN_WIDTH / 2)
 				|| bul[i].x > (GetPlayerPosX() + SCREEN_WIDTH / 2)) {
-				Kill(WAPON_PISTOL, i);
+				Kill(WAPON_BASE, i);
 			}
 		}
-		Bullet_HitCheck(WAPON_BASE, i, bul[i].x, bul[i].y);
+		if (bul[i].alive)Bullet_HitCheck(WAPON_BASE, i, bul[i].x, bul[i].y);
 }
 
 
@@ -305,12 +304,13 @@ void Bullet_Update() {
 			if (bul[i].alive == true && enemy01[t].isDead != true && HitChecker(Bullet_X1[i], Bullet_Y1[i], Bullet_X2[i], Bullet_Y2[i],
 					Enemy01_X1[t], Enemy01_Y1[t], Enemy01_X2[t], Enemy01_Y2[t])) {
 				
-				if (Wapon.Wapon_kind == WAPON_PISTOL)	{enemy01[t].hp -= PISTOL_DAMAGE; }
+				if (Wapon.Wapon_kind == WAPON_PISTOL) { enemy01[t].hp -= PISTOL_DAMAGE;  }
 				if (Wapon.Wapon_kind == WAPON_HUMAN)	{enemy01[t].hp -= HUMAN_DAMAGE;  }
 				if (Wapon.Wapon_kind == WAPON_ROCKET)	{enemy01[t].hp -= ROCKET_DAMAGE; }
 				if (Wapon.Wapon_kind == WAPON_SHOTGUN)	{enemy01[t].hp -= SHOTGUN_DAMAGE;}
 				if (Wapon.Wapon_kind == WAPON_SNIPER)	{enemy01[t].hp -= SNIPER_DAMAGE; }
 				if (Wapon.Wapon_kind == WAPON_DOUBLES)	{enemy01[t].hp -= DOUBLES_DAMAGE;}
+				bul[i].hit = true;
 			}
 		}
 	}
@@ -323,6 +323,7 @@ void Bullet_Update() {
 		for (int t = 0; t < ENEMY_MAX; t++) {
 			if (Wapon.Wapon_kind == WAPON_MINIGUN && Minigun.ShotF[j] == true && enemy01[t].isDead != true && HitChecker(MiniBul_X1[j], MiniBul_Y1[j], MiniBul_X2[j], MiniBul_Y2[j],
 				Enemy01_X1[t], Enemy01_Y1[t], Enemy01_X2[t], Enemy01_Y2[t])) {
+				Minigun.ShotH[j] = true;
 				enemy01[t].hp -= MINIGUN_DAMAGE;
 			}
 		}
@@ -340,7 +341,7 @@ void Bullet_Rend() {
 			}
 		}
 #ifdef DEBUG
-		DrawBox(Bullet_X1[i], Bullet_Y1[i], Bullet_X2[i], Bullet_Y2[i], 0x0000FF, FALSE);
+		DrawBox(Bullet_X1[i], Bullet_Y1[i], Bullet_X2[i], Bullet_Y2[i], 0xFFFFFF, FALSE);
 #endif
 	}
 
@@ -356,7 +357,7 @@ void Bullet_Rend() {
 
 		}
 #ifdef DEBUG
-		DrawBox(MiniBul_X1[j], MiniBul_Y1[j], MiniBul_X2[j], MiniBul_Y2[j], 0x0000FF, FALSE);
+		DrawBox(MiniBul_X1[j], MiniBul_Y1[j], MiniBul_X2[j], MiniBul_Y2[j], 0xFFFFFF, FALSE);
 #endif
 	}
 

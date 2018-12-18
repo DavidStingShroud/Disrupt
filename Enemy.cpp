@@ -96,6 +96,7 @@ void Enemy_Init()
 			enemy01[i].kind = (ENEMY_KIND)ENEMY_CREEP;
 			enemy01[i].hp = ENEMY01_LIFE;
 			enemy01[i].atk01 = ENEMY01_ATTACK01;
+			enemy01[i].isGrounded = false;
 		}
 	}
 
@@ -113,7 +114,9 @@ float Enemy01_Y2[ENEMY_MAX];
 void Enemy_Update()
 {
 	for (int i = 0; i < ENEMY_MAX; i++) {
-
+#ifdef DEBUG
+		if (GetKeyState(VK_DELETE) < 0) { Enemy_Init(); }
+#endif
 		if (enemy01[i].isDead != true) {
 
 		//-----Animation----------
@@ -182,8 +185,13 @@ void Enemy_Update()
 			Enemy01_X2[i] = enemy01[i].x + (BLOCK_SIZE / 2 - 8);
 			Enemy01_Y2[i] = enemy01[i].y;
 			if (HitChecker(PlayerX1, PlayerY1, PlayerX2, PlayerY2,
-				Enemy01_X1[i], Enemy01_Y1[i], Enemy01_X2[i], Enemy01_Y2[i])) {
+				Enemy01_X1[i], Enemy01_Y1[i], Enemy01_X2[i], Enemy01_Y2[i]) && P.isDamaged == false) {
+				if (enemy01[i].turn == 0)P.vel_x += 230;
+				else if (enemy01[i].turn == 1)P.vel_x -= 230;
+				P.vel_y = 0;
+				P.vel_y -= 530;
 				P.hp -= enemy01[i].atk01;
+				P.isDamaged = true;
 			}
 			//-----Hit--------------
 

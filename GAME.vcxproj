@@ -76,11 +76,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\DxLibLightModel</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\amg\Desktop\Disrupt\DxLibLightModel</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>.\DxLibLightModel</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\amg\Desktop\Disrupt\DxLibLightModel</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -104,13 +104,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\DxLibLightModel</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\amg\Desktop\Disrupt\DxLibLightModel</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>.\DxLibLightModel</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\amg\Desktop\Disrupt\DxLibLightModel</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
