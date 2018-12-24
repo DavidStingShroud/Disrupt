@@ -1,6 +1,6 @@
 #include "Global.h"
 
-struct TILE tile;
+struct TILE Tile;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {

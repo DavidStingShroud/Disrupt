@@ -215,7 +215,7 @@ static void Move(float time) {
 		}
 		if (Key.input[KEY_INPUT_RCONTROL] == 1 && !(Wapon.Wapon_kind == WAPON_MINIGUN)
 			&& !(Wapon.Wapon_kind == WAPON_SHOTGUN) && !(Wapon.Wapon_kind == WAPON_DOUBLES)
-			&& bul[i].alive==false) {
+			&& bul[i].isAlive==false) {
 			if (Wapon.Wapon_kind == WAPON_PISTOL && Ammo.Bullet>0) {
 				Ammo.Bullet--;
 				NozzleputterDefault(i);
@@ -254,7 +254,7 @@ static void Move(float time) {
 		for (int j = 0; j < SHOTGUN_BULMAX; j++) {
 			ShotGunSetter(j);
 		}
-		if (bul[i].alive == false) {
+		if (bul[i].isAlive == false) {
 			NozzleputterDefault(i);
 			}	
 		}
@@ -267,7 +267,7 @@ static void Move(float time) {
 			for (int j = 0; j < DOUBLES_BULMAX; j++) {
 				ShotGunSetter(j);
 			}
-			if (bul[i].alive == false) {
+			if (bul[i].isAlive == false) {
 				NozzleputterDefault(i);
 			}
 		}
@@ -303,7 +303,7 @@ static void Move(float time) {
 
 	//----各種バレットを更新--------------------
 	for (int i = 0; i < ALL_BULLET_MAX; i++) {
-		if (bul[i].alive == true && !(Wapon.Wapon_kind == WAPON_SHOTGUN)) {
+		if (bul[i].isAlive == true && !(Wapon.Wapon_kind == WAPON_SHOTGUN)) {
 			if(Wapon.isFlash[i])Wapon.firecount[i]++;
 			Fire(i);
 		}
@@ -317,14 +317,14 @@ static void Move(float time) {
 	}
 
 	for (int i = 0; i < SHOTGUN_BULMAX; i++) {
-		if (bul[i].alive == true && (Wapon.Wapon_kind == WAPON_SHOTGUN)) {
+		if (bul[i].isAlive == true && (Wapon.Wapon_kind == WAPON_SHOTGUN)) {
 			if (Wapon.isFlash[i])Wapon.firecount[i]++;
 			ShotGunUpdater(i);
 		}
 	}
 
 	for (int i = 0; i < DOUBLES_BULMAX; i++) {
-		if (bul[i].alive == true && (Wapon.Wapon_kind == WAPON_DOUBLES)) {
+		if (bul[i].isAlive == true && (Wapon.Wapon_kind == WAPON_DOUBLES)) {
 			if (Wapon.isFlash[i])Wapon.firecount[i]++;
 			ShotGunUpdater(i);
 		}
@@ -462,7 +462,7 @@ static void Jump(float time) {
 
 		if (Key.input[KEY_INPUT_RCONTROL] == 1 && !(Wapon.Wapon_kind == WAPON_MINIGUN)
 			&& !(Wapon.Wapon_kind == WAPON_SHOTGUN) && !(Wapon.Wapon_kind == WAPON_DOUBLES)
-			&& bul[i].alive == false) {
+			&& bul[i].isAlive == false) {
 			if (Wapon.Wapon_kind == WAPON_PISTOL && Ammo.Bullet>0) {
 				Ammo.Bullet--;
 				NozzleputterDefault(i);
@@ -501,7 +501,7 @@ static void Jump(float time) {
 			for (int j = 0; j < SHOTGUN_BULMAX; j++) {
 				ShotGunSetter(j);
 			}
-			if (bul[i].alive == false) {
+			if (bul[i].isAlive == false) {
 				NozzleputterDefault(i);
 			}
 		}
@@ -514,7 +514,7 @@ static void Jump(float time) {
 			for (int j = 0; j < DOUBLES_BULMAX; j++) {
 				ShotGunSetter(j);
 			}
-			if (bul[i].alive == false) {
+			if (bul[i].isAlive == false) {
 				NozzleputterDefault(i);
 			}
 		}
@@ -550,7 +550,7 @@ static void Jump(float time) {
 
 	//----各種バレットを更新--------------------
 	for (int i = 0; i < ALL_BULLET_MAX; i++) {
-		if (bul[i].alive == true && !(Wapon.Wapon_kind == WAPON_SHOTGUN)) {
+		if (bul[i].isAlive == true && !(Wapon.Wapon_kind == WAPON_SHOTGUN)) {
 			if(Wapon.isFlash[i])Wapon.firecount[i]++;
 			Fire(i);
 		}
@@ -564,14 +564,14 @@ static void Jump(float time) {
 	}
 
 	for (int i = 0; i < SHOTGUN_BULMAX; i++) {
-		if (bul[i].alive == true && (Wapon.Wapon_kind == WAPON_SHOTGUN)) {
+		if (bul[i].isAlive == true && (Wapon.Wapon_kind == WAPON_SHOTGUN)) {
 			if (Wapon.isFlash[i])Wapon.firecount[i]++;
 			ShotGunUpdater(i);
 		}
 	}
 
 	for (int i = 0; i < DOUBLES_BULMAX; i++) {
-		if (bul[i].alive == true && (Wapon.Wapon_kind == WAPON_DOUBLES)) {
+		if (bul[i].isAlive == true && (Wapon.Wapon_kind == WAPON_DOUBLES)) {
 			if (Wapon.isFlash[i])Wapon.firecount[i]++;
 			ShotGunUpdater(i);
 		}

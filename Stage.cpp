@@ -23,7 +23,7 @@ static int Map01[MAP_HEIGHT][MAP_WIDTH] =
 
 	{ -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1 },
 	{ -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1 },
-	{ -1,-1,-1,-1,-1,  02,-1,-1,-1,-1,  -1,-1,02,02,-1,  -1,-1,-1,-1,-1 },
+	{ -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1,  -1,-1,-1,-1,-1 },
 	{ -1,-1,-1,-1,-1,  02,-1,-1,-1,-1,  -1,-1,02,02,-1,  -1,-1,-1,-1,-1 },
 	{ 00,00,00,00,00,  00,00,00,00,00,  00,00,00,00,00,  00,00,00,00,00 },
 
@@ -85,7 +85,7 @@ void Stage_Init()
 			UseMap[y][x] = Map01[y][x];
 		}
 	}
-	tile.StageBG_Use = tile.StageBG[0];
+	Tile.StageBG_Use = Tile.StageBG[0];
 }
 
 void Stage_Release()
@@ -99,7 +99,7 @@ void Stage_Update()
 }
 
 void Stage_RendBG() {
-	DrawGraph(0, 0 - BLOCK_SIZE, tile.StageBG_Use, FALSE);
+	DrawGraph(0, 0 - BLOCK_SIZE, Tile.StageBG_Use, FALSE);
 }
 
 void Stage_Rend()
@@ -107,7 +107,7 @@ void Stage_Rend()
 	for (int y = 0; y < MAP_HEIGHT; y++) {
 		for (int x = 0; x < MAP_WIDTH; x++) {
 			if (UseMap[y][x] >= 0) {
-				DrawGraph(BLOCK_SIZE * x, BLOCK_SIZE * y, tile.gra[UseMap[y][x]], FALSE);
+				DrawGraph(BLOCK_SIZE * x, BLOCK_SIZE * y, Tile.gra[UseMap[y][x]], FALSE);
 			}
 		}
 	}

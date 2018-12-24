@@ -3,7 +3,6 @@
 #include"math.h"
 
 struct AMMO Ammo;
-int bulgra[4];
 BULLET bul[ALL_BULLET_MAX];
 struct MINIGUN_PARAM Minigun;
 int rocket_velocity[ALL_BULLET_MAX];
@@ -39,7 +38,7 @@ static void Kill(WAPON_KIND kind, int no) {
 		Wapon.firecount[no] = 0;
 		bul[no].cool = 0;
 		rocket_velocity[no] = 0;
-		bul[no].alive = false;
+		bul[no].isAlive = false;
 	}
 }
 
@@ -105,7 +104,7 @@ void NozzleputterDefault(int i) {
 
 			bul[i].y = P.y - 46;//23
 			bul[i].hit = false;
-			bul[i].alive = true;
+			bul[i].isAlive = true;
 }
 
 void ChainBulletSetter(int no) {
@@ -191,7 +190,7 @@ void ShotGunUpdater(int no) {
 				}
 			}
 		}
-	if(bul[no].alive)Bullet_HitCheck(WAPON_BASE, no, bul[no].x, bul[no].y);
+	if(bul[no].isAlive)Bullet_HitCheck(WAPON_BASE, no, bul[no].x, bul[no].y);
 }
 
 void Fire(int i)
@@ -232,7 +231,7 @@ void Fire(int i)
 				Kill(WAPON_BASE, i);
 			}
 		}
-		if (bul[i].alive)Bullet_HitCheck(WAPON_BASE, i, bul[i].x, bul[i].y);
+		if (bul[i].isAlive)Bullet_HitCheck(WAPON_BASE, i, bul[i].x, bul[i].y);
 }
 
 
@@ -241,7 +240,7 @@ void Bullet_Init() {
 	for (int i = 0; i < ALL_BULLET_MAX; i++) {
 		bul[i].kind = 0;
 		bul[i].hit = false;
-		bul[i].alive = false;
+		bul[i].isAlive = false;
 		bul[i].angle = 0;
 	}
 	for (int j = 0; j < MINIGUN_BULMAX; j++) {
@@ -263,6 +262,11 @@ void Bullet_Release() {
 }
 
 void Bullet_Update() {
+
+#ifdef DEBUG
+	if (GetKeyState(VK_END) < 0)Bullet_Init();
+#endif
+
 	if (Wapon.Wapon_kind == WAPON_PISTOL || Wapon.Wapon_kind == WAPON_MINIGUN) {
 		Ammo.MaxAmmo = BULLET_MAX;
 		Ammo.NowAmmo = Ammo.Bullet;
@@ -301,7 +305,7 @@ void Bullet_Update() {
 
 		for (int t = 0; t < ENEMY_MAX; t++) {
 
-			if (bul[i].alive == true && enemy01[t].isDead != true && HitChecker(Bullet_X1[i], Bullet_Y1[i], Bullet_X2[i], Bullet_Y2[i],
+			if (bul[i].isAlive == true && enemy01[t].isAlive == true && HitChecker(Bullet_X1[i], Bullet_Y1[i], Bullet_X2[i], Bullet_Y2[i],
 					Enemy01_X1[t], Enemy01_Y1[t], Enemy01_X2[t], Enemy01_Y2[t])) {
 				
 				if (Wapon.Wapon_kind == WAPON_PISTOL) { enemy01[t].hp -= PISTOL_DAMAGE;  }
@@ -311,6 +315,57 @@ void Bullet_Update() {
 				if (Wapon.Wapon_kind == WAPON_SNIPER)	{enemy01[t].hp -= SNIPER_DAMAGE; }
 				if (Wapon.Wapon_kind == WAPON_DOUBLES)	{enemy01[t].hp -= DOUBLES_DAMAGE;}
 				bul[i].hit = true;
+
+				if (GoreSwitch == true) {
+					Gore[i].x = enemy01[t].x;
+					Gore[i].y = enemy01[t].y + RandAtoZ(-5, 5);
+					Gore[i].turn = bul[i].turn ^ 1;
+					Gore[i].isAlive = true;
+					Gore[i].turn = bul[i].turn ^ 1;
+					Gore[i].isAlive = true;
+
+					Gore[i + 32].x = enemy01[t].x;
+					Gore[i + 32].y = enemy01[t].y + RandAtoZ(-15, 15);
+					Gore[i + 32].turn = Gore[i].turn;
+					Gore[i + 32].isAlive = true;
+
+					if (rand() % 2 < 2) {
+						enemy01[t].hp -= 3;
+						Gore[i + 96].x = enemy01[t].x + RandAtoZ(-5, 5);
+						Gore[i + 96].y = enemy01[t].y;
+						if (rand() % 2 == 1)Gore[i + 96].turn = 0;
+						else Gore[i + 96].turn = 1;
+						Gore[i + 96].isAlive = true;
+
+						if (rand() % 3 == 1) {
+							enemy01[t].hp -= 2;
+							Gore[i + 96 + 1].x = enemy01[t].x + RandAtoZ(-5, 5);
+							Gore[i + 96 + 1].y = enemy01[t].y;
+							if (rand() % 2 == 1)Gore[i + 96 + 1].turn = 0;
+							else Gore[i + 96 + 1].turn = 1;
+							Gore[i + 96 + 1].isAlive = true;
+						}
+					}
+
+					if (rand() % 2 < 1) {
+						enemy01[t].hp -= 2;
+						GoreTall[i].x = enemy01[t].x + RandAtoZ(-5, 5);
+						GoreTall[i].y = enemy01[t].y;
+						if (rand() % 2 == 1)GoreTall[i].turn = 0;
+						else GoreTall[i].turn = 1;
+						GoreTall[i].isAlive = true;
+
+						if (rand() % 4 == 1) {
+							enemy01[t].hp -= 1;
+							GoreTall[i + 1].x = enemy01[t].x + RandAtoZ(-5, 5);
+							GoreTall[i + 1].y = enemy01[t].y;
+							if (rand() % 2 == 1)GoreTall[i + 1].turn = 0;
+							else GoreTall[i + 1].turn = 1;
+							GoreTall[i + 1].isAlive = true;
+						}
+					}
+				}
+
 			}
 		}
 	}
@@ -321,10 +376,55 @@ void Bullet_Update() {
 		MiniBul_Y2[j] = Minigun.ShotY[j] + (BLOCK_SIZE / 2 + 4);
 
 		for (int t = 0; t < ENEMY_MAX; t++) {
-			if (Wapon.Wapon_kind == WAPON_MINIGUN && Minigun.ShotF[j] == true && enemy01[t].isDead != true && HitChecker(MiniBul_X1[j], MiniBul_Y1[j], MiniBul_X2[j], MiniBul_Y2[j],
+			if (Wapon.Wapon_kind == WAPON_MINIGUN && Minigun.ShotF[j] == true && enemy01[t].isAlive == true && HitChecker(MiniBul_X1[j], MiniBul_Y1[j], MiniBul_X2[j], MiniBul_Y2[j],
 				Enemy01_X1[t], Enemy01_Y1[t], Enemy01_X2[t], Enemy01_Y2[t])) {
-				Minigun.ShotH[j] = true;
 				enemy01[t].hp -= MINIGUN_DAMAGE;
+				Minigun.ShotH[j] = true;
+
+				if (GoreSwitch == true) {
+					Gore[j].x = enemy01[t].x;
+					Gore[j].y = enemy01[t].y + RandAtoZ(-5, 5);
+					Gore[j].turn = Minigun.ShotR[j] ^ 1;
+					Gore[j].isAlive = true;
+
+					Gore[j + 32].x = enemy01[t].x;
+					Gore[j + 32].y = enemy01[t].y + RandAtoZ(-15, 15);
+					Gore[j + 32].turn = Gore[j].turn;
+					Gore[j + 32].isAlive = true;
+
+					if (rand() % 2 < 2) {
+						Gore[j + 96].x = enemy01[t].x + RandAtoZ(-5, 5);
+						Gore[j + 96].y = enemy01[t].y;
+						if (rand() % 2 == 1)Gore[j + 96].turn = 0;
+						else Gore[j + 96].turn = 1;
+						Gore[j + 96].isAlive = true;
+
+						if (rand() % 3 == 1) {
+							Gore[j + 96 + 1].x = enemy01[t].x + RandAtoZ(-5, 5);
+							Gore[j + 96 + 1].y = enemy01[t].y;
+							if (rand() % 2 == 1)Gore[j + 96 + 1].turn = 0;
+							else Gore[j + 96 + 1].turn = 1;
+							Gore[j + 96 + 1].isAlive = true;
+						}
+					}
+
+					if (rand() % 2 < 1) {
+						GoreTall[j].x = enemy01[t].x + RandAtoZ(-5, 5);
+						GoreTall[j].y = enemy01[t].y;
+						if (rand() % 2 == 1)GoreTall[j].turn = 0;
+						else GoreTall[j].turn = 1;
+						GoreTall[j].isAlive = true;
+
+						if (rand() % 4 == 1) {
+							GoreTall[j + 1].x = enemy01[t].x + RandAtoZ(-5, 5);
+							GoreTall[j + 1].y = enemy01[t].y;
+							if (rand() % 2 == 1)GoreTall[j + 1].turn = 0;
+							else GoreTall[j + 1].turn = 1;
+							GoreTall[j + 1].isAlive = true;
+						}
+					}
+				}
+
 			}
 		}
 	}
@@ -334,10 +434,10 @@ void Bullet_Rend() {
 	for (int i = 0; i < ALL_BULLET_MAX; i++) {
 		if (bul[i].time != 0 && !(Wapon.Wapon_kind == WAPON_SHOTGUN) && !(Wapon.Wapon_kind == WAPON_MINIGUN) && !(Wapon.Wapon_kind == WAPON_DOUBLES)) {
 			if (bul[i].turn == 0) {
-				DrawGraphF(bul[i].x, bul[i].y, bulgra[bul[i].kind], TRUE);
+				DrawGraphF(bul[i].x, bul[i].y, bul[i].gra[bul[i].kind], TRUE);
 			}
 			else if (bul[i].turn == 1) {
-				DrawTurnGraphF(bul[i].x, bul[i].y, bulgra[bul[i].kind], TRUE);
+				DrawTurnGraphF(bul[i].x, bul[i].y, bul[i].gra[bul[i].kind], TRUE);
 			}
 		}
 #ifdef DEBUG
@@ -349,10 +449,10 @@ void Bullet_Rend() {
 	for (int j = 0; j < MINIGUN_BULMAX; j++) {
 		if ((Wapon.Wapon_kind == WAPON_MINIGUN) && Minigun.ShotF[j] == true) {
 			if (Minigun.ShotR[j] == false) {
-				DrawGraphF(Minigun.ShotX[j], Minigun.ShotY[j], bulgra[2], TRUE);
+				DrawGraphF(Minigun.ShotX[j], Minigun.ShotY[j], bul[j].gra[2], TRUE);
 			}
 			else if (Minigun.ShotR[j] == true) {
-				DrawTurnGraphF(Minigun.ShotX[j], Minigun.ShotY[j], bulgra[2], TRUE);
+				DrawTurnGraphF(Minigun.ShotX[j], Minigun.ShotY[j], bul[j].gra[2], TRUE);
 			}
 
 		}
@@ -363,28 +463,28 @@ void Bullet_Rend() {
 
 	//------ショットガンのバレット描画-------
 	for (int t = 0; t < SHOTGUN_BULMAX; t++) {
-		if (Wapon.Wapon_kind == WAPON_SHOTGUN && bul[t].alive == true) {
+		if (Wapon.Wapon_kind == WAPON_SHOTGUN && bul[t].isAlive == true) {
 			//RotaGraph：中心X、Y、拡大率、角度、ファイル、透過TRUE
 			if (bul[t].turn == 0) {
 				DrawRotaGraphF(bul[t].x + (BLOCK_SIZE / 2), bul[t].y + (BLOCK_SIZE / 2), 
-					1.0f, bul[t].angle, bulgra[bul[t].kind], TRUE);
+					1.0f, bul[t].angle, bul[t].gra[bul[t].kind], TRUE);
 			}
 			else if (bul[t].turn == 1) {
 				DrawRotaGraphF(bul[t].x + (BLOCK_SIZE / 2), bul[t].y + (BLOCK_SIZE / 2), 
-					1.0f, -(bul[t].angle + PI), bulgra[bul[t].kind], TRUE);
+					1.0f, -(bul[t].angle + PI), bul[t].gra[bul[t].kind], TRUE);
 			}
 		}
 	}
 	for (int t = 0; t < DOUBLES_BULMAX; t++) {
-		if (Wapon.Wapon_kind == WAPON_DOUBLES && bul[t].alive == true) {
+		if (Wapon.Wapon_kind == WAPON_DOUBLES && bul[t].isAlive == true) {
 			//RotaGraph：中心X、Y、拡大率、角度、ファイル、透過TRUE
 			if (bul[t].turn == 0) {
 				DrawRotaGraphF(bul[t].x + (BLOCK_SIZE / 2), bul[t].y + (BLOCK_SIZE / 2),
-					1.0f, bul[t].angle, bulgra[bul[t].kind], TRUE);
+					1.0f, bul[t].angle, bul[t].gra[bul[t].kind], TRUE);
 			}
 			else if (bul[t].turn == 1) {
 				DrawRotaGraphF(bul[t].x + (BLOCK_SIZE / 2), bul[t].y + (BLOCK_SIZE / 2),
-					1.0f, -(bul[t].angle + PI), bulgra[bul[t].kind], TRUE);
+					1.0f, -(bul[t].angle + PI), bul[t].gra[bul[t].kind], TRUE);
 			}
 		}
 	}

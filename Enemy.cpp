@@ -85,14 +85,20 @@ static void Enemy_BlockCheck_Y(ENEMY_KIND kind, int no) {
 
 void Enemy_Init()
 {
-	enemy01[0].isDead = false;
+	enemy01[0].isAlive = true;
+	enemy01[1].isAlive = true;
+	enemy01[2].isAlive = true;
 
 	enemy01[0].x = 300;
+	enemy01[1].x = 120;
+	enemy01[2].x = 200;
 
 	enemy01[0].y = 330;
+	enemy01[1].y = 330;
+	enemy01[2].y = 330;
 
 	for (int i = 0; i < ENEMY_MAX; i++) {
-		if (enemy01[i].isDead != true) {
+		if (enemy01[i].isAlive == true) {
 			enemy01[i].kind = (ENEMY_KIND)ENEMY_CREEP;
 			enemy01[i].hp = ENEMY01_LIFE;
 			enemy01[i].atk01 = ENEMY01_ATTACK01;
@@ -117,7 +123,7 @@ void Enemy_Update()
 #ifdef DEBUG
 		if (GetKeyState(VK_DELETE) < 0) { Enemy_Init(); }
 #endif
-		if (enemy01[i].isDead != true) {
+		if (enemy01[i].isAlive == true) {
 
 		//-----Animation----------
 			if (enemy01[i].isNear != true) {
@@ -162,20 +168,20 @@ void Enemy_Update()
 
 
 			//-----Move-------------
-			if (enemy01[i].x - (BLOCK_SIZE * 5) < GetPlayerPosX() && enemy01[i].x + (BLOCK_SIZE * 5) > GetPlayerPosX()) {
-				if (enemy01[i].x < GetPlayerPosX())enemy01[i].vel_x += 0.1;
-				else if (enemy01[i].x > GetPlayerPosX())enemy01[i].vel_x -= 0.1;
+			//if (enemy01[i].x - (BLOCK_SIZE * 5) < GetPlayerPosX() && enemy01[i].x + (BLOCK_SIZE * 5) > GetPlayerPosX()) {
+			//	if (enemy01[i].x < GetPlayerPosX())enemy01[i].vel_x += 0.1;
+			//	else if (enemy01[i].x > GetPlayerPosX())enemy01[i].vel_x -= 0.1;
 
-				if (enemy01[i].vel_x > 10)enemy01[i].vel_x = 10;
-				if (enemy01[i].vel_x < -10)enemy01[i].vel_x = -10;
-				enemy01[i].isNear = true;
-			}
-			else {
-				enemy01[i].vel_x = 0;
-				enemy01[i].isNear = false;
-			}
+			//	if (enemy01[i].vel_x > 10)enemy01[i].vel_x = 10;
+			//	if (enemy01[i].vel_x < -10)enemy01[i].vel_x = -10;
+			//	enemy01[i].isNear = true;
+			//}
+			//else {
+			//	enemy01[i].vel_x = 0;
+			//	enemy01[i].isNear = false;
+			//}
 
-			enemy01[i].x += enemy01[i].vel_x;
+			//enemy01[i].x += enemy01[i].vel_x;
 			//-----Move-------------
 
 
@@ -198,7 +204,7 @@ void Enemy_Update()
 
 			//-----Die--------------
 			if (enemy01[i].hp <= 0) {
-				enemy01[i].isDead = true;
+				enemy01[i].isAlive = false;
 			}
 
 			Enemy_BlockCheck_X(enemy01[i].kind, i);
@@ -210,7 +216,7 @@ void Enemy_Update()
 void Enemy_Render()
 {
 	for (int i = 0; i < ENEMY_MAX; i++) {
-		if (enemy01[i].isDead != true) {
+		if (enemy01[i].isAlive == true) {
 			if (enemy01[i].turn == 0) {
 				DrawGraphF(enemy01[i].x - (BLOCK_SIZE / 2), enemy01[i].y - (BLOCK_SIZE * 2), enemy01[i].gra[enemy01[i].AnimNo], TRUE);
 			}
